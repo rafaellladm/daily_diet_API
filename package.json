@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "dotenv": "^16.3.1",
     "fastify": "^4.24.3",
     "knex": "^3.0.1",
@@ -19,6 +20,7 @@
   },
   "devDependencies": {
     "@rocketseat/eslint-config": "^2.1.0",
+    "@types/bcryptjs": "^2.4.5",
     "@types/node": "^20.8.7",
     "eslint": "^8.51.0",
     "tsx": "^3.14.0",
