@@ -14,6 +14,19 @@ export async function usersRoutes(app: FastifyInstance) {
 
     const { name, email, password } = createUsersBodySchema.parse(request.body)
 
+    let sessionId = request.cookies.sessionId
+
+    if (!sessionId) {
+      sessionId = randomUUID()
+
+      reply.cookie('sessionId', sessionId, {
+        path: '/',
+        maxAge: 1000 * 60 * 60 * 24 * 7,
+      })
+    } else {
+      sessionId = randomUUID()
+    }
+
     // Cadastro de usuário
     const passwordHash = await hash(password, 8)
 
@@ -22,6 +35,7 @@ export async function usersRoutes(app: FastifyInstance) {
       name,
       email,
       password: passwordHash,
+      session_id: sessionId,
     })
 
     return reply.status(201).send()

@@ -2,40 +2,54 @@ import { FastifyInstance } from 'fastify'
 import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
 import { knex } from '../database'
+import { checkSessionIdExists } from '../middleware/check-session-id-exists'
 
 export async function mealsRoutes(app: FastifyInstance) {
-  app.post('/', async (request, reply) => {
-    const createMealsBodySchema = z.object({
-      name: z.string(),
-      description: z.string(),
-      dateBr: z.string(),
-      hour: z.string(),
-      diet: z.boolean(),
-    })
+  app.post(
+    '/',
+    {
+      preHandler: [checkSessionIdExists],
+    },
+    async (request, reply) => {
+      const createMealsBodySchema = z.object({
+        name: z.string(),
+        description: z.string(),
+        dateBr: z.string(),
+        hour: z.string(),
+        diet: z.boolean(),
+      })
 
-    const { name, description, dateBr, hour, diet } =
-      createMealsBodySchema.parse(request.body)
+      const { sessionId } = request.cookies
 
-    const dateArray = dateBr.split('/')
+      const [user] = await knex('users')
+        .where('session_id', sessionId)
+        .select('id')
 
-    const dateTime = new Date(
-      `${dateArray[2]}-${dateArray[1]}-${dateArray[0]} ${hour}`,
-    )
+      const userId = user.id
 
-    if (isNaN(dateTime.getTime())) {
-      console.log('The date is valid:', dateTime)
-    } else {
-      console.log('The date is invalid!')
-    }
+      const { name, description, dateBr, hour, diet } =
+        createMealsBodySchema.parse(request.body)
 
-    await knex('meals').insert({
-      id: randomUUID(),
-      name,
-      description,
-      date: dateTime.toISOString(),
-      diet,
-    })
+      const dateArray = dateBr.split('/')
 
-    return reply.status(201).send()
-  })
+      const dateTime = new Date(
+        `${dateArray[2]}-${dateArray[1]}-${dateArray[0]} ${hour}`,
+      )
+
+      if (isNaN(dateTime.getTime())) {
+        throw new Error('Invalid date format!')
+      }
+
+      await knex('meals').insert({
+        id: randomUUID(),
+        name,
+        description,
+        date: dateTime.toISOString(),
+        diet,
+        user_id: userId,
+      })
+
+      return reply.status(201).send()
+    },
+  )
 }
