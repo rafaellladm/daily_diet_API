@@ -25,6 +25,11 @@ export async function usersRoutes(app: FastifyInstance) {
       })
     } else {
       sessionId = randomUUID()
+
+      reply.cookie('sessionId', sessionId, {
+        path: '/',
+        maxAge: 1000 * 60 * 60 * 24 * 7,
+      })
     }
 
     // Cadastro de usuário
