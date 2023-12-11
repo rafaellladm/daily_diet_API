@@ -14,6 +14,20 @@ export async function usersRoutes(app: FastifyInstance) {
 
     const { name, email, password } = createUsersBodySchema.parse(request.body)
 
+    // Verificação de usuário
+    const checkUserExist = await knex
+      .select('*')
+      .from(`users`)
+      .where('email', email)
+      .first()
+
+    if (checkUserExist) {
+      return reply.status(400).send({
+        error: 'User already exists!',
+      })
+    }
+
+    // Ativando seção com cookie
     let sessionId = request.cookies.sessionId
 
     if (!sessionId) {
