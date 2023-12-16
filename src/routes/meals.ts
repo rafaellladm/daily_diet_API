@@ -141,4 +141,29 @@ export async function mealsRoutes(app: FastifyInstance) {
       return { meal }
     },
   )
+
+  app.delete(
+    '/:id',
+    { preHandler: [checkSessionIdExists] },
+    async (request, reply) => {
+      const getMealsParamsSchema = z.object({
+        id: z.string().uuid(),
+      })
+
+      const { id } = getMealsParamsSchema.parse(request.params)
+
+      const { sessionId } = request.cookies
+
+      const user = await knex('users').where('session_id', sessionId).first()
+
+      await knex('meals')
+        .where('id', id)
+        .andWhere('user_id', user?.id)
+        .delete()
+
+      return reply.status(204).send({
+        message: 'User deleted successfully',
+      })
+    },
+  )
 }
