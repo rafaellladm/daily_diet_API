@@ -199,4 +199,21 @@ export async function mealsRoutes(app: FastifyInstance) {
       return reply.status(200).send(total)
     },
   )
+
+  app.get(
+    '/off',
+    { preHandler: checkSessionIdExists },
+    async (request, reply) => {
+      const { sessionId } = request.cookies
+
+      const user = await knex('users').where('session_id', sessionId).first()
+
+      const total = await knex('meals')
+        .where('user_id', user?.id)
+        .andWhere('diet', false)
+        .count()
+
+      return reply.status(200).send(total)
+    },
+  )
 }
