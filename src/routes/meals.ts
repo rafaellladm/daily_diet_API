@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
 import { knex } from '../database'
 import { checkSessionIdExists } from '../middleware/check-session-id-exists'
+import { findLongestSequence } from '../middleware/findLongestSequence'
 
 export async function mealsRoutes(app: FastifyInstance) {
   app.post(
@@ -214,6 +215,25 @@ export async function mealsRoutes(app: FastifyInstance) {
         .count()
 
       return reply.status(200).send(total)
+    },
+  )
+
+  // Conta sequencia maior de refeições dentro da dieta
+  app.get(
+    '/sequence',
+    { preHandler: checkSessionIdExists },
+    async (request, reply) => {
+      const { sessionId } = request.cookies
+
+      const user = await knex('users').where('session_id', sessionId).first()
+
+      const total = await knex('meals')
+        .where('user_id', user?.id)
+        .pluck('diet')
+
+      const sequence = findLongestSequence(total)
+
+      return reply.status(200).send(sequence)
     },
   )
 }
