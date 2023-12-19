@@ -218,7 +218,6 @@ export async function mealsRoutes(app: FastifyInstance) {
     },
   )
 
-  // Conta sequencia maior de refeições dentro da dieta
   app.get(
     '/sequence',
     { preHandler: checkSessionIdExists },
